@@ -1,3 +1,5 @@
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.concurrent.Semaphore;
 
 import javax.swing.ImageIcon;
@@ -13,10 +15,10 @@ public class Pombo implements Runnable{
 	private Semaphore semaforoCaixPostal;
 
 	// Abaixo atributos do pombo 
-	private int tempoViagem, tempoCarga, tempoDescarga;
+	private int tempoViagem, tempoCarga, tempoDescarga, quantidadeMensagem;
 
 
-	public Pombo(Semaphore aptoViagemP, Buffer buffer, Semaphore sCaixPostal, JLabel imagemPassaro, int tCarga, int tDescarga, int tViagem) {
+	public Pombo(Semaphore aptoViagemP, Buffer buffer, Semaphore sCaixPostal, JLabel imagemPassaro, int tCarga, int tDescarga, int tViagem, int qtdeMensagem) {
 		// TODO Auto-generated constructor stub
 		this.aptoViagem = aptoViagemP;
 		o_Buffer = buffer;
@@ -24,7 +26,8 @@ public class Pombo implements Runnable{
 		componente = imagemPassaro;
 		tempoCarga = tCarga;
 		tempoDescarga = tDescarga;
-		tempoViagem = tViagem;
+		tempoViagem = tViagem*2;
+		quantidadeMensagem = qtdeMensagem;
 	}
 
 	/*
@@ -69,7 +72,8 @@ public class Pombo implements Runnable{
 					contadorImagensPassaro++;
 				}
 
-				
+				DateFormat formato = new SimpleDateFormat("HH:mm:ss.SSS");
+				System.out.println("hora=: "+formato.toString());
 				/*
 				 * Após terminar a viagem, pássaro se prepara para voar novamente
 				 * atribuição de 0 ao maximo => valor 0 para quantidade de mensagens que ele tem.
@@ -78,7 +82,7 @@ public class Pombo implements Runnable{
 				 */
 				o_Buffer.setMaximo(0);
 				o_Buffer.setMaximoCaixa(o_Buffer.getMaximoCaixa()+3); // C
-				semaforoCaixPostal.release(); // Quando a caixa enche, a pessoa dorme. Essa linha acorda quem tava dormindo (Acorda todos, porém a Thread pessoa só permite que 1 pessoa por vez adicione a mensagem.
+				semaforoCaixPostal.release(quantidadeMensagem); // Quando a caixa enche, a pessoa dorme. Essa linha acorda quem tava dormindo (Acorda todos, porém a Thread pessoa só permite que 1 pessoa por vez adicione a mensagem.
 				o_Buffer.setPassaroVoando(false); 
 				
 				// A thread passaro está em loop infinito. Após essa última linha ele retorna para começar tudo de novo.

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
 import javax.swing.JLabel;
 
@@ -6,16 +7,22 @@ import javax.swing.JLabel;
 public class Buffer {
 
 	private JLabel textoPlaca;
+	private Boolean caixaCheia;
+	Semaphore semaforo;
 	
-	public Buffer(JLabel Jplaca) {
+	public Buffer(JLabel Jplaca, Pombo pb) {
+		setPombo(pb);
 		textoPlaca = Jplaca;
 		// TODO Auto-generated constructor stub
 	}
 	private int maximo = 0;
+	private int eliminarPessoa;
 	private ArrayList<Mensagem> quantidadeAtual = new ArrayList<Mensagem>();
 	private int maximoCaixa;
 	private Boolean passaroVoando;
 	private JLabel textoQuantidadeMensagens;
+	private Pombo pombo;
+	
 	
 	public void zerarBuffer(){
 		this.setQuantidadeAtual(new ArrayList<Mensagem>());
@@ -24,11 +31,14 @@ public class Buffer {
 	}
 	
 	//adiciona na caixa.
-	public void adicionaMensagem(Mensagem mensagem){
+	public void adicionaMensagem(Mensagem mensagem, Semaphore s){
 		this.quantidadeAtual.add(mensagem);
 		this.setMaximo(this.getMaximo() + 1); // CRESCE ATÉ ATINGIR 3
 		this.setMaximoCaixa(this.getMaximoCaixa() - 1); // CRESCE ATÉ ATINGIR 3
 		textoPlaca.setText(""+ (this.getMaximoCaixa()));
+		caixaCheia = getMaximoCaixa()==0? true : false;
+		setCaixaCheia(caixaCheia);
+		if (getMaximoCaixa()==0) s.release();
 	}
 
 	
@@ -70,6 +80,30 @@ public class Buffer {
 
 	public void setMaximoCaixa(int maximoCaixa) {
 		this.maximoCaixa = maximoCaixa;
+	}
+
+	public Boolean getCaixaCheia() {
+		return caixaCheia;
+	}
+
+	public void setCaixaCheia(Boolean caixaCheia) {
+		this.caixaCheia = caixaCheia;
+	}
+
+	public int getEliminarPessoa() {
+		return eliminarPessoa;
+	}
+
+	public void setEliminarPessoa(int eliminarPessoa) {
+		this.eliminarPessoa = eliminarPessoa;
+	}
+
+	public Pombo getPombo() {
+		return pombo;
+	}
+
+	public void setPombo(Pombo pombo) {
+		this.pombo = pombo;
 	}
 
 }

@@ -1,14 +1,29 @@
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 
+import javax.swing.JLabel;
+
 
 public class Pessoa implements Runnable {
 	private  Buffer o_Buffer;
-	private  Semaphore s1,s2, n, mutex, aptoViagem, semaforoCaixaPostal;
+	private  Semaphore s1,s2, n, mutex, aptoViagem;
+	Semaphore semaforoCaixaPostal, auxSemaforoCaixaPostal;
+	private JLabel componente;
+	private JLabel textoDormir;
+	private JLabel textoColando;
 
 	private Boolean passaroVoando;
 
 	// Atributos próprios da Pessoa
+	
+	public JLabel getComponente() {
+		return componente;
+	}
+
+	public void setComponente(JLabel componente) {
+		this.componente = componente;
+	}
+
 	private int id;
 	private int tempoEscrita;
 	public int getId() {
@@ -36,8 +51,11 @@ public class Pessoa implements Runnable {
 	}
 
 	// Construtor da Classe Pessoa
-	public Pessoa(int idPessoa, Buffer bufferpassado, int tempoEscrita, Semaphore sCaixaPostal, Semaphore sem1, Semaphore sem2, Semaphore n, Semaphore mutex, Semaphore aptoViagem){
+	public Pessoa(int idPessoa, JLabel comp, JLabel txtDormindo, JLabel txtColando, Buffer bufferpassado, int tempoEscrita, Semaphore auxSCaixa, Semaphore sCaixaPostal, Semaphore sem1, Semaphore sem2, Semaphore n, Semaphore mutex, Semaphore aptoViagem){
 		super();
+		componente = comp;
+		textoDormir = txtDormindo;
+		textoColando = txtColando;
 		o_Buffer = bufferpassado;
 		s1 = sem1;
 		s2 = sem2;
@@ -46,7 +64,8 @@ public class Pessoa implements Runnable {
 		this.n = n;
 		this.mutex = mutex;
 		this.aptoViagem = aptoViagem;
-		this.semaforoCaixaPostal = sCaixaPostal;
+		semaforoCaixaPostal = sCaixaPostal;
+		auxSemaforoCaixaPostal = auxSCaixa;
 	}
 
 	// Método que a Thread Pessoa executa quando é instanciada.
@@ -55,6 +74,15 @@ public class Pessoa implements Runnable {
 
 		try {
 			while(true){
+
+				if(o_Buffer.getEliminarPessoa()==this.getId()){
+					System.out.println("Pessoa "+this.getId()+ " foi excluida");
+
+					componente.setText("Pessoa "+this.getId()+ " foi excluida");
+					break;
+				}
+				
+				componente.setText("Pessoa "+this.getId()+ " escrevendo");
 
 				System.out.println("Pessoa "+this.getId()+ " escrevendo ...");
 				Thread.currentThread().sleep(this.getTempoEscrita()*1000);
@@ -69,20 +97,27 @@ public class Pessoa implements Runnable {
 				 *  caso a caixa esteja cheia, dorme e espera a caixa esvaziar para poder adicionar
 				 */
 
-				this.mutex.acquire(); // bloqueia o mutex
+				mutex.acquire(); // bloqueia o mutex
+				System.out.println("QTDE "+o_Buffer.getMaximoCaixa());
+				while(o_Buffer.getMaximoCaixa()==0) {
+					textoDormir.setText("Pessoa "+this.getId()+ " vai dormir");
 
-				// ESSE IF É PARA VERIFICAR SE ATINGIU O MAXIMO DA CAIXA
-				if(this.o_Buffer.getMaximoCaixa()==0) System.out.println("Pessoa "+this.getId()+ " vai dormir ...");
+					System.out.println("Pessoa "+this.getId()+ " vai dormir ...");
+					
+//					auxSemaforoCaixaPostal.acquire();
 
-				while(this.o_Buffer.getMaximoCaixa()==0){
-					System.out.println("vai dormir aqui 1 "+Thread.currentThread().getName());
-					semaforoCaixaPostal.acquire();
+						mutex.release();
+	//					auxSemaforoCaixaPostal.release();
+						semaforoCaixaPostal.acquire();
+
 				}
 
+				textoColando.setText("Pessoa "+this.getId()+ " colando mensagem");
 
-				System.out.println("Pessoa "+this.getId()+ " colando mensagem ...");
-				o_Buffer.adicionaMensagem(mensagem);
-				this.semaforoCaixaPostal.release();
+				System.out.println("Pessoa "+this.getId()+ " colando mensagem ..."+o_Buffer.getMaximoCaixa());
+
+				o_Buffer.adicionaMensagem(mensagem, semaforoCaixaPostal);
+				//semaforoCaixaPostal.release(1);
 
 
 				// ACORDA O PASSARO CASO ATINJA O NUMERO DE MENSAGENS
@@ -95,7 +130,7 @@ public class Pessoa implements Runnable {
 				}
 
 
-				this.mutex.release(); // libera o mutex
+				mutex.release(); // libera o mutex
 			}
 
 		} catch (InterruptedException e) {
@@ -104,5 +139,21 @@ public class Pessoa implements Runnable {
 		}
 
 
+	}
+
+	public JLabel getTextoColando() {
+		return textoColando;
+	}
+
+	public void setTextoColando(JLabel textoColando) {
+		this.textoColando = textoColando;
+	}
+
+	public JLabel getTextoDormir() {
+		return textoDormir;
+	}
+
+	public void setTextoDormir(JLabel textoDormir) {
+		this.textoDormir = textoDormir;
 	}
 }
