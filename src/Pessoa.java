@@ -1,21 +1,46 @@
-import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.JLabel;
 
 
+/**
+ * Retirei a sobrecarga de parâmetros no construtor da classe e
+ * deixei a cargo dos setters
+ *
+ * @author Ivan updated on 03/04/2019
+ */
 public class Pessoa implements Runnable {
-	private  Buffer o_Buffer;
-	private  Semaphore s1,s2, n, mutex, aptoViagem;
-	Semaphore semaforoCaixaPostal, auxSemaforoCaixaPostal;
-	private JLabel componente;
-	private JLabel textoDormir;
-	private JLabel textoColando;
+	private static final String TAG = "Pessoa";
 
-	private Boolean passaroVoando;
+	private Buffer    mBuffer;
+	private Semaphore s1;
+	private Semaphore s2;
+	private Semaphore n;
+	private Semaphore mutex;
+	private Semaphore aptoViagem;
+	private Semaphore semaforoCaixaPostal;
+	private Semaphore auxSemaforoCaixaPostal;
+	private JLabel    componente;
+	private JLabel    textoDormir;
+	private JLabel    textoColando;
+	private Boolean   passaroVoando;
+	private int       id;
+	private int       tempoEscrita;
 
-	// Atributos próprios da Pessoa
-	
+	public Pessoa(Semaphore auxSCaixa, Semaphore sCaixaPostal,
+				  Semaphore s1, Semaphore s2, Semaphore n,
+				  Semaphore mutex, Semaphore aptoViagem){
+
+		this.s1 = s1;
+		this.s2 = s2;
+		this.n = n;
+		this.mutex = mutex;
+		this.aptoViagem = aptoViagem;
+		this.semaforoCaixaPostal = sCaixaPostal;
+		this.auxSemaforoCaixaPostal = auxSCaixa;
+	}
+
 	public JLabel getComponente() {
 		return componente;
 	}
@@ -24,8 +49,6 @@ public class Pessoa implements Runnable {
 		this.componente = componente;
 	}
 
-	private int id;
-	private int tempoEscrita;
 	public int getId() {
 		return id;
 	}
@@ -50,97 +73,6 @@ public class Pessoa implements Runnable {
 		this.passaroVoando = passaroVoando;
 	}
 
-	// Construtor da Classe Pessoa
-	public Pessoa(int idPessoa, JLabel comp, JLabel txtDormindo, JLabel txtColando, Buffer bufferpassado, int tempoEscrita, Semaphore auxSCaixa, Semaphore sCaixaPostal, Semaphore sem1, Semaphore sem2, Semaphore n, Semaphore mutex, Semaphore aptoViagem){
-		super();
-		componente = comp;
-		textoDormir = txtDormindo;
-		textoColando = txtColando;
-		o_Buffer = bufferpassado;
-		s1 = sem1;
-		s2 = sem2;
-		id = idPessoa;
-		this.tempoEscrita = tempoEscrita;
-		this.n = n;
-		this.mutex = mutex;
-		this.aptoViagem = aptoViagem;
-		semaforoCaixaPostal = sCaixaPostal;
-		auxSemaforoCaixaPostal = auxSCaixa;
-	}
-
-	// Método que a Thread Pessoa executa quando é instanciada.
-	public void run() {
-		// TODO Auto-generated method stub
-
-		try {
-			while(true){
-
-				if(o_Buffer.getEliminarPessoa()==this.getId()){
-					System.out.println("Pessoa "+this.getId()+ " foi excluida");
-
-					componente.setText("Pessoa "+this.getId()+ " foi excluida");
-					break;
-				}
-				
-				componente.setText("Pessoa "+this.getId()+ " escrevendo");
-
-				System.out.println("Pessoa "+this.getId()+ " escrevendo ...");
-				Thread.currentThread().sleep(this.getTempoEscrita()*1000);
-				Mensagem mensagem = new Mensagem();
-				mensagem.setPessoa(this);
-				mensagem.setCorpo("Mensagem de: "+this.toString());
-				mensagem.setId(1);
-
-
-
-				/* OBSERVAÇÃO BUFFER LOTAÇÃO CAIXA
-				 *  caso a caixa esteja cheia, dorme e espera a caixa esvaziar para poder adicionar
-				 */
-
-				mutex.acquire(); // bloqueia o mutex
-				System.out.println("QTDE "+o_Buffer.getMaximoCaixa());
-				while(o_Buffer.getMaximoCaixa()==0) {
-					textoDormir.setText("Pessoa "+this.getId()+ " vai dormir");
-
-					System.out.println("Pessoa "+this.getId()+ " vai dormir ...");
-					
-//					auxSemaforoCaixaPostal.acquire();
-
-						mutex.release();
-	//					auxSemaforoCaixaPostal.release();
-						semaforoCaixaPostal.acquire();
-
-				}
-
-				textoColando.setText("Pessoa "+this.getId()+ " colando mensagem");
-
-				System.out.println("Pessoa "+this.getId()+ " colando mensagem ..."+o_Buffer.getMaximoCaixa());
-
-				o_Buffer.adicionaMensagem(mensagem, semaforoCaixaPostal);
-				//semaforoCaixaPostal.release(1);
-
-
-				// ACORDA O PASSARO CASO ATINJA O NUMERO DE MENSAGENS
-				if(o_Buffer.getMaximo() == 2 && o_Buffer.getPassaroVoando()==false){
-					System.out.println("Pombo pode viajar");
-					this.aptoViagem.release();
-					o_Buffer.setPassaroVoando(true);
-					o_Buffer.zerarBuffer();
-					// Quando viajar, capacidade do buffer da caixa é aumentada em 3
-				}
-
-
-				mutex.release(); // libera o mutex
-			}
-
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-
-	}
-
 	public JLabel getTextoColando() {
 		return textoColando;
 	}
@@ -156,4 +88,118 @@ public class Pessoa implements Runnable {
 	public void setTextoDormir(JLabel textoDormir) {
 		this.textoDormir = textoDormir;
 	}
+
+	public void setBuffer(Buffer buffer) {
+		this.mBuffer = buffer;
+	}
+
+	public Buffer getBuffer() {
+		return mBuffer;
+	}
+
+	/**
+	 * Esse método simula o método {@link Thread#sleep(long)}. Basicamente
+	 * obtemos a hora do sistema em segundos, criamos um loop infinito e só
+	 * o paramos quando a subtração do tempo atual pelo o atual (em segundos,
+	 * também, claro) for igual ao tempo passa como parâmetro.
+	 *
+	 * @see {@link Thread}
+	 * @param s
+	 */
+	public void dormir(long s) {
+		long timeMillis = System.currentTimeMillis();
+		long start      = TimeUnit.MILLISECONDS.toSeconds(timeMillis);
+
+		while (true) {
+			long end = TimeUnit.MILLISECONDS
+					.toSeconds(System.currentTimeMillis());
+			if ((end - start) == s) break;
+		}
+	}
+
+	/**
+	 * Esse método é herdado da implementação de Runnable
+	 */
+	public void run() {
+		try {
+			while(true){
+				if(mBuffer.getEliminarPessoa() == this.getId()) {
+					componente.setText("Pessoa "+this.getId()+ " foi excluida");
+
+					Log.w(TAG, "Pessoa "+this.getId()+ " foi excluida");
+					break;
+				} else {
+
+				}
+				
+				componente.setText("Pessoa "+this.getId()+ " escrevendo");
+
+				Log.w(TAG, "Pessoa "+this.getId()+ " escrevendo");
+
+
+				//Thread.currentThread().sleep(this.getTempoEscrita()*1000);
+				this.dormir(this.getTempoEscrita());
+
+
+				/* OBSERVAÇÃO BUFFER LOTAÇÃO CAIXA
+				 *  caso a caixa esteja cheia, dorme e espera a caixa esvaziar para poder adicionar
+				 */
+
+				mutex.acquire(); // bloqueia o mutex
+
+				Log.w(TAG, "Quantida do buffer "+mBuffer.getMaximoCaixa());
+
+				while(mBuffer.getMaximoCaixa()==0) {
+					textoDormir.setText("Pessoa "+this.getId()+ " vai dormir");
+
+					System.out.println("Pessoa "+this.getId()+ " vai dormir ...");
+					
+//					auxSemaforoCaixaPostal.acquire();
+
+						mutex.release();
+	//					auxSemaforoCaixaPostal.release();
+						semaforoCaixaPostal.acquire();
+
+				}
+
+				textoColando.setText("Pessoa "+this.getId()+ " colando mensagem");
+
+				String msgColando = String.format("Pessoa %d colando mensagem. Limite da caixa: %d",
+						this.getId(), mBuffer.getMaximoCaixa());
+
+				Log.w(TAG, msgColando);
+
+				Mensagem mensagem = new Mensagem();
+						 mensagem.setPessoa(this);
+					     mensagem.setCorpo("Mensagem de "+this.toString());
+						 mensagem.setId(1);
+
+				mBuffer.adicionaMensagem(mensagem, semaforoCaixaPostal);
+				//semaforoCaixaPostal.release(1);
+
+
+				/**
+				 * Esse trecho é importante, pois caso se atinja o número máximo
+				 * de mensagens na caixa, ele acordará
+				 */
+				if(mBuffer.getMaximo() == 2
+						&& mBuffer.getPassaroVoando() == false){
+
+					this.aptoViagem.release();
+					this.mBuffer.setPassaroVoando(true);
+					this.mBuffer.zerarBuffer();
+					// Quando viajar, capacidade do buffer da caixa é aumentada em 3
+
+					Log.w(TAG, "Agora o pombo pode viajar");
+				}
+
+				mutex.release(); // libera o mutex
+			}
+
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 }

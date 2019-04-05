@@ -5,40 +5,38 @@ import javax.swing.JLabel;
 
 
 public class Buffer {
-
-	private JLabel textoPlaca;
-	private Boolean caixaCheia;
-	Semaphore semaforo;
+	private JLabel    textoPlaca;
+	private Boolean   caixaCheia;
+	private Semaphore semaforo;
+	private int       maximo = 0;
+	private int       eliminarPessoa;
+	private ArrayList<Mensagem> quantidadeAtual = new ArrayList<Mensagem>();
+	private int       maximoCaixa;
+	private Boolean   passaroVoando;
+	private JLabel    textoQuantidadeMensagens;
+	private Pombo     pombo;
 	
 	public Buffer(JLabel Jplaca, Pombo pb) {
 		setPombo(pb);
 		textoPlaca = Jplaca;
-		// TODO Auto-generated constructor stub
 	}
-	private int maximo = 0;
-	private int eliminarPessoa;
-	private ArrayList<Mensagem> quantidadeAtual = new ArrayList<Mensagem>();
-	private int maximoCaixa;
-	private Boolean passaroVoando;
-	private JLabel textoQuantidadeMensagens;
-	private Pombo pombo;
-	
 	
 	public void zerarBuffer(){
 		this.setQuantidadeAtual(new ArrayList<Mensagem>());
 		this.setMaximo(0);
 		this.setMaximoCaixa(getMaximoCaixa()+3);
 	}
-	
-	//adiciona na caixa.
+
 	public void adicionaMensagem(Mensagem mensagem, Semaphore s){
 		this.quantidadeAtual.add(mensagem);
 		this.setMaximo(this.getMaximo() + 1); // CRESCE ATÉ ATINGIR 3
 		this.setMaximoCaixa(this.getMaximoCaixa() - 1); // CRESCE ATÉ ATINGIR 3
+
 		textoPlaca.setText(""+ (this.getMaximoCaixa()));
 		caixaCheia = getMaximoCaixa()==0? true : false;
 		setCaixaCheia(caixaCheia);
-		if (getMaximoCaixa()==0) s.release();
+
+		if (getMaximoCaixa() == 0) s.release();
 	}
 
 	

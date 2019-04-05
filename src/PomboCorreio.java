@@ -1,10 +1,7 @@
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.Label;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -19,65 +16,51 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
 import javax.swing.JButton;
 
 
 public class PomboCorreio extends JFrame {
-
-	private JPanel contentPane;
-	public JLabel imagePassaro;
-	public JLabel placa;
-	public JLabel textoPlaca;
-	public JLabel placaPessoa;
-	public JLabel lblPlacadormindo;
-	public JLabel lblPlacacolando;
-
-	public JLabel textoPlacaPessoa;
-
-	private JTextField tempoEsperaPessoa; // textField
+	private JPanel jPContentPane;
+	public  JLabel jLImagePassaro;
+	private JLabel placa;
+	private JLabel jLTextoPlaca;
+	private JLabel placaPessoa;
+	private JLabel jLPlacaDormindo;
+	private JLabel jLPlacaColando;
+	private JLabel jLTextoPlacaPessoa;
+	private JTextField mTextFieldTempoEscrita;
 	private JLabel lblMenu;
-	private JTextField numElininarPessoa;
+	private JTextField mTextFieldIDElininarPessoa;
+	private int posX, posY;
+	private Buffer buffer;
+//	buffer.setMaximoCaixa(10);
+//	buffer.setPassaroVoando(false);
+	private Semaphore semaforo1;
+	private Semaphore semaforo2;
+	private Semaphore n;
+	private Semaphore mutex;
+	private Semaphore auxSemaforoCaixaPostal;
+	private Semaphore aptoViagem;
+	private Semaphore semaforoCaixaPostal;
+	private Random gerador; // variável que auxilia na geração de números randômicos.
+	private int contadorPessoas = 1;
+	private JButton jButtonEliminarPessoa;
+	private JTextField jTextFiledTempoCargap;
+	private JTextField jTextFieldTempoDescargap;
+	private JTextField jTextFieldTempoviagemp;
+	private JTextField jTextFieldNumeromensagensp;
+	private Pombo pb;
+	private JTextField jTextFieldMaximoCaixa;
+	private JButton jButtonConfigurarCaixa;
+	private JLabel jLTextoPlacaColando;
+	private JLabel jLTextoPlacaDormindo;
+	private JLabel jLabelTempoEscrita;
+	private JLabel jLabelID;
+	private JLabel jLabelTC;
+	private JLabel jLabellTD;
+	private JLabel jLabelTV;
+	private JLabel jLabelNM;
 
-	int posx, posy;
-
-
-	Buffer buffer_usado;
-//	buffer_usado.setMaximoCaixa(10);
-//	buffer_usado.setPassaroVoando(false);
-	Semaphore s1;
-	Semaphore s2;
-	Semaphore n;
-	Semaphore mutex;
-	Semaphore auxsemaforoCaixaPostal;
-	Semaphore aptoViagem;
-	Semaphore semaforoCaixaPostal;
-	Random gerador; // variável que auxilia na geração de números randômicos.
-	int contadorPessoas = 1;
-	private JButton btnEliminarPessoa;
-	private JTextField txtTempocargap;
-	private JTextField txtTempodescargap;
-	private JTextField txtTempoviagemp;
-	private JTextField txtNumeromensagensp;
-
-	Pombo pb;
-	private JTextField txtMaximocaixa;
-	private JButton btnConfigurarCaixa;
-	private JLabel lblTextoplacacolando;
-	private JLabel lblTextoPlacadormindo;
-	private JLabel lblTempoescrita;
-	private JLabel lblId;
-	private JLabel lblTc;
-	private JLabel lblTd;
-	private JLabel lblTv;
-	private JLabel lblNm;
-	
-	
-	
-	
-	/**
-	 * Launch the application.
-	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -91,10 +74,7 @@ public class PomboCorreio extends JFrame {
 		});
 	}
 
-	/**
-	 * Create the frame.
-	 * @throws InterruptedException 
-	 */
+
 	public PomboCorreio() throws InterruptedException {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1200, 470);
@@ -107,248 +87,249 @@ public class PomboCorreio extends JFrame {
 		placaPessoa.setBounds(820, 250, 240, 124);
 		placaPessoa.setIcon(new ImageIcon(System.getProperty("user.dir") + "/src/images/auxMensagem.png"));
 
-		lblPlacadormindo = new JLabel("");
-		lblPlacadormindo.setBounds(820, 310, 240, 124);
-		lblPlacadormindo.setIcon(new ImageIcon(System.getProperty("user.dir") + "/src/images/auxMensagem.png"));
+		jLPlacaDormindo = new JLabel("");
+		jLPlacaDormindo.setBounds(820, 310, 240, 124);
+		jLPlacaDormindo.setIcon(new ImageIcon(System.getProperty("user.dir") + "/src/images/auxMensagem.png"));
 		
-		lblPlacacolando = new JLabel("");
-		lblPlacacolando.setBounds(820, 370, 240, 124);
-		lblPlacacolando.setIcon(new ImageIcon(System.getProperty("user.dir") + "/src/images/auxMensagem.png"));
-		
-		
-		imagePassaro = new JLabel("");
-		imagePassaro.setBounds(0, 150, 120, 200);
-		imagePassaro.setIcon(new ImageIcon(System.getProperty("user.dir") + "/src/teste.png"));
+		jLPlacaColando = new JLabel("");
+		jLPlacaColando.setBounds(820, 370, 240, 124);
+		jLPlacaColando.setIcon(new ImageIcon(System.getProperty("user.dir") + "/src/images/auxMensagem.png"));
 
+		jLImagePassaro = new JLabel("");
+		jLImagePassaro.setBounds(0, 150, 120, 200);
+		jLImagePassaro.setIcon(new ImageIcon(System.getProperty("user.dir") + "/src/teste.png"));
 
-
-		// cria Jpanel com uma imagem de fundo
-		contentPane =  new JPanel() {
+		/**
+		 * Cria o JPanel com uma magem de fundo
+		 */
+		jPContentPane =  new JPanel() {
 			@Override
 			protected void paintComponent(Graphics g) {
 				super.paintComponent(g);
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
 
-				Image image = toolkit.getImage(System.getProperty("user.dir") + "/src/images/planoDeFundo.png");		
-
+				Image image = toolkit.getImage(System.getProperty("user.dir") + "/src/images/planoDeFundo.png");
 				g.drawImage(image, 0, 0, null);
 			}
 		};
 
 
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		contentPane.setLayout(null);
+		jPContentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		setContentPane(jPContentPane);
+		jPContentPane.setLayout(null);
 
-		textoPlaca = new JLabel("");
-		textoPlaca.setHorizontalAlignment(SwingConstants.CENTER);
-		textoPlaca.setBounds(4, 312, 60, 16);
-		getContentPane().add(textoPlaca);
-		textoPlaca.setForeground(Color.white);
-		textoPlaca.setText("10");
+		jLTextoPlaca = new JLabel("");
+		jLTextoPlaca.setHorizontalAlignment(SwingConstants.CENTER);
+		jLTextoPlaca.setBounds(4, 312, 60, 16);
+		jLTextoPlaca.setForeground(Color.white);
+		jLTextoPlaca.setText("10");
 
-		textoPlacaPessoa = new JLabel("");
-		textoPlacaPessoa.setHorizontalAlignment(SwingConstants.CENTER);
-		textoPlacaPessoa.setBounds(820, 280, 240, 50);
-		getContentPane().add(textoPlacaPessoa);
-		textoPlacaPessoa.setText("INICIANDO");
-		
-		lblTextoplacacolando = new JLabel("");
-		lblTextoplacacolando.setHorizontalAlignment(SwingConstants.CENTER);
-		lblTextoplacacolando.setText("...");
-		lblTextoplacacolando.setBounds(820, 350, 240, 15);
-		contentPane.add(lblTextoplacacolando);
-		
-		lblTextoPlacadormindo = new JLabel("texto placaDormindo");
-		lblTextoPlacadormindo.setHorizontalAlignment(SwingConstants.CENTER);
-		lblTextoPlacadormindo.setText("...");
-		lblTextoPlacadormindo.setBounds(820, 420, 240, 15);
-		contentPane.add(lblTextoPlacadormindo);
+		getContentPane().add(jLTextoPlaca);
 
+		jLTextoPlacaPessoa = new JLabel("");
+		jLTextoPlacaPessoa.setHorizontalAlignment(SwingConstants.CENTER);
+		jLTextoPlacaPessoa.setBounds(820, 280, 240, 50);
+		jLTextoPlacaPessoa.setText("Iniciando");
+
+		getContentPane().add(jLTextoPlacaPessoa);
 		
+		jLTextoPlacaColando = new JLabel("");
+		jLTextoPlacaColando.setHorizontalAlignment(SwingConstants.CENTER);
+		jLTextoPlacaColando.setText("...");
+		jLTextoPlacaColando.setBounds(820, 350, 240, 15);
+		jPContentPane.add(jLTextoPlacaColando);
 		
-		
-		
-		
-		
-		
-		
+		jLTextoPlacaDormindo = new JLabel("texto placaDormindo");
+		jLTextoPlacaDormindo.setHorizontalAlignment(SwingConstants.CENTER);
+		jLTextoPlacaDormindo.setText("...");
+		jLTextoPlacaDormindo.setBounds(820, 420, 240, 15);
+		jPContentPane.add(jLTextoPlacaDormindo);
+
 		getContentPane().add(placa);
 		getContentPane().add(placaPessoa);
-		getContentPane().add(lblPlacacolando);
-		getContentPane().add(lblPlacadormindo);
-		getContentPane().add(imagePassaro);
+		getContentPane().add(jLPlacaColando);
+		getContentPane().add(jLPlacaDormindo);
+		getContentPane().add(jLImagePassaro);
 		System.out.println("|||||||||");
 
-		/*
-		 * Inicianliza Buffer, Semáforos, Objetos Pessoas e pombo.
-		 */
+		mTextFieldTempoEscrita = new JTextField();
+		mTextFieldTempoEscrita.setBounds(840, 57, 50, 19);
+		jPContentPane.add(mTextFieldTempoEscrita);
+		mTextFieldTempoEscrita.setColumns(10);
 
-
-		s1 = new Semaphore(1);
-		s2 = new Semaphore(0);
-		n = new Semaphore(10);
-		mutex = new Semaphore(1);
-		auxsemaforoCaixaPostal = new Semaphore(1);
-
-		aptoViagem = new Semaphore(0);
-		semaforoCaixaPostal = new Semaphore(1);
-
-
-		tempoEsperaPessoa = new JTextField();
-		tempoEsperaPessoa.setBounds(840, 57, 50, 19);
-		contentPane.add(tempoEsperaPessoa);
-		tempoEsperaPessoa.setColumns(10);
-
-		lblMenu = new JLabel("MENU");
+		lblMenu = new JLabel("Menu");
 		lblMenu.setBounds(970, 26, 70, 15);
-		contentPane.add(lblMenu);
+		jPContentPane.add(lblMenu);
 
-		numElininarPessoa = new JTextField();
-		numElininarPessoa.setBounds(840, 80, 50, 19);
-		contentPane.add(numElininarPessoa);
-		numElininarPessoa.setColumns(10);
+		mTextFieldIDElininarPessoa = new JTextField();
+		mTextFieldIDElininarPessoa.setBounds(840, 80, 50, 19);
+		jPContentPane.add(mTextFieldIDElininarPessoa);
+		mTextFieldIDElininarPessoa.setColumns(10);
 
-
-
-		//Inicializa 10 Threads Produtoras
-
-		
 		JButton btnCriarPessoa = new JButton("Criar Pessoa");
 		btnCriarPessoa.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if(tempoEsperaPessoa.getText().equals("")) JOptionPane.showMessageDialog(null, "Entre com um número");
-				int PtempoEspera = Integer.parseInt(tempoEsperaPessoa.getText());
-				if (contadorPessoas == 1) posy = 200;
-				if(contadorPessoas<5){
-					posx = 820;
-					posy = posy+80; 
+				int tempoEscrita = 0;
+
+				if(mTextFieldTempoEscrita.getText().equals("")) {
+					JOptionPane.showMessageDialog(null,
+							"Entre com um número");
+				} else {
+					tempoEscrita = Integer.parseInt(mTextFieldTempoEscrita.getText());
+				}
+
+				if (contadorPessoas == 1) posY = 200;
+				else if(contadorPessoas < 5){
+					posX = 820;
+					posY = posY + 80;
 				}
 				
-				
-				Pessoa p = new Pessoa(contadorPessoas, textoPlacaPessoa, lblTextoPlacadormindo, lblTextoplacacolando, buffer_usado, PtempoEspera, auxsemaforoCaixaPostal, semaforoCaixaPostal, s1, s2, n, mutex, aptoViagem);
-				Thread p1 = new Thread(p);
-				p1.start(); // inicia Thread Pessoa (ver Classe pessoa)
+				Pessoa pessoa = new Pessoa(auxSemaforoCaixaPostal,
+						semaforoCaixaPostal, semaforo1, semaforo2, n, mutex, aptoViagem);
+
+				       pessoa.setId(contadorPessoas);
+				       pessoa.setComponente(jLTextoPlacaPessoa);
+				       pessoa.setTextoDormir(jLTextoPlacaDormindo);
+				       pessoa.setTextoColando(jLPlacaColando);
+				       pessoa.setBuffer(buffer);
+				       pessoa.setTempoEscrita(tempoEscrita);
+
+				Thread thread = new Thread(pessoa);
+				thread.start();
+
 				contadorPessoas++;
 			}
 		});
 
-
-
 		btnCriarPessoa.setBounds(910, 57, 240, 19);
-		contentPane.add(btnCriarPessoa);
-		btnEliminarPessoa = new JButton("Eliminar Pessoa");
-		
-		btnEliminarPessoa.addActionListener(new ActionListener() {
+		jPContentPane.add(btnCriarPessoa);
+
+		jButtonEliminarPessoa = new JButton("Eliminar Pessoa");
+		jButtonEliminarPessoa.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if(numElininarPessoa.getText().equals("")) JOptionPane.showMessageDialog(null, "Entre com um número");
-				else{
-					int idPessoa = Integer.parseInt(numElininarPessoa.getText());
-					buffer_usado.setEliminarPessoa(idPessoa);
+				if(mTextFieldIDElininarPessoa.getText().equals("")) {
+					JOptionPane.showMessageDialog(null, "Informe o ID do usuário");
+				} else {
+					int idPessoa = Integer.parseInt(mTextFieldIDElininarPessoa.getText());
+					buffer.setEliminarPessoa(idPessoa);
 					// aqui prepara para eliminar. só irá eliminar de fato quando a thread for executar
 				}
-
 			}
 		});
 
 		
-		btnEliminarPessoa.setBounds(910, 80, 240, 19);
-		contentPane.add(btnEliminarPessoa);
+		jButtonEliminarPessoa.setBounds(910, 80, 240, 19);
+		jPContentPane.add(jButtonEliminarPessoa);
 		
-		txtTempocargap = new JTextField();
-		txtTempocargap.setBounds(840, 140, 50, 19);
-		contentPane.add(txtTempocargap);
-		txtTempocargap.setColumns(10);
+		jTextFiledTempoCargap = new JTextField();
+		jTextFiledTempoCargap.setBounds(840, 140, 50, 19);
+		jPContentPane.add(jTextFiledTempoCargap);
+		jTextFiledTempoCargap.setColumns(10);
 		
-		txtTempodescargap = new JTextField();
-		txtTempodescargap.setBounds(940, 140, 50, 19);
-		contentPane.add(txtTempodescargap);
-		txtTempodescargap.setColumns(10);
+		jTextFieldTempoDescargap = new JTextField();
+		jTextFieldTempoDescargap.setBounds(940, 140, 50, 19);
+		jPContentPane.add(jTextFieldTempoDescargap);
+		jTextFieldTempoDescargap.setColumns(10);
 		
-		txtTempoviagemp = new JTextField();
-		txtTempoviagemp.setBounds(1040, 140, 50, 19);
-		contentPane.add(txtTempoviagemp);
-		txtTempoviagemp.setColumns(10);
+		jTextFieldTempoviagemp = new JTextField();
+		jTextFieldTempoviagemp.setBounds(1040, 140, 50, 19);
+		jPContentPane.add(jTextFieldTempoviagemp);
+		jTextFieldTempoviagemp.setColumns(10);
 		
-		txtNumeromensagensp = new JTextField();
-		txtNumeromensagensp.setBounds(1140, 140, 50, 19);
-		contentPane.add(txtNumeromensagensp);
-		txtNumeromensagensp.setColumns(10);
+		jTextFieldNumeromensagensp = new JTextField();
+		jTextFieldNumeromensagensp.setBounds(1140, 140, 50, 19);
+		jPContentPane.add(jTextFieldNumeromensagensp);
+		jTextFieldNumeromensagensp.setColumns(10);
 		
 		JButton btnConfigurarPombo = new JButton("Configurar Pombo");
 		btnConfigurarPombo.setBounds(950, 180, 170, 25);
 
 		btnConfigurarPombo.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				//valida os campos de configurar o pombo
-				if(txtTempocargap.getText().equals("") || txtTempodescargap.getText().equals("") || txtTempoviagemp.getText().equals("") || txtNumeromensagensp.getText().equals("") ) JOptionPane.showMessageDialog(null, "Erro configuração do Pombo. Entre com dados corretos.");
-				else{
-					//Construindo Pombo
-					int tempoCarga = Integer.parseInt(txtTempocargap.getText());
-					int tempoDescarga = Integer.parseInt(txtTempodescargap.getText());
-					int tempoViagem = Integer.parseInt(txtTempoviagemp.getText());
-					int numeroMensagens = Integer.parseInt(txtNumeromensagensp.getText());
-					buffer_usado = new Buffer(textoPlaca, pb);
-					buffer_usado.setPassaroVoando(false);
-					buffer_usado.setMaximo(0);
 
-					pb = new Pombo(aptoViagem, buffer_usado, semaforoCaixaPostal, imagePassaro,tempoCarga, tempoDescarga, tempoViagem, numeroMensagens);
-					buffer_usado.setPombo(pb);
-					
-					
-					Thread pombo = new Thread(pb);
-					pombo.start(); // Inicia Thread Pombo (ver classe pombo)
+				if(jTextFiledTempoCargap.getText().equals("")
+						|| jTextFieldTempoDescargap.getText().equals("")
+						|| jTextFieldTempoviagemp.getText().equals("")
+						|| jTextFieldNumeromensagensp.getText().equals("") ) {
 
-					// aqui prepara para eliminar. só irá eliminar de fato quando a thread for executar
+					JOptionPane.showMessageDialog(null,
+							"Você deve especificar os valores para criar o Pombo");
+				} else {
+					int tempoCarga          = Integer.parseInt(jTextFiledTempoCargap.getText());
+					int tempoDescarga       = Integer.parseInt(jTextFieldTempoDescargap.getText());
+					int tempoViagem         = Integer.parseInt(jTextFieldTempoviagemp.getText());
+					int quantidadeMensagens = Integer.parseInt(jTextFieldNumeromensagensp.getText());
+
+					buffer = new Buffer(jLTextoPlaca, pb);
+					buffer.setPassaroVoando(false);
+					buffer.setMaximo(0);
+
+					Pombo pombo = new Pombo();
+						  pombo.setSemaforoAptoViagem(aptoViagem);
+						  pombo.setBuffer(buffer);
+						  pombo.setSemaforoCaixPostal(semaforoCaixaPostal);
+						  pombo.setjLComponente(jLImagePassaro);
+						  pombo.setTempoCarga(tempoCarga);
+						  pombo.setTempoDescarga(tempoDescarga);
+						  pombo.setTempoViagem(tempoViagem);
+						  pombo.setQuantidadeMensagem(quantidadeMensagens);
+
+					buffer.setPombo(pombo);
+
+					Thread thread = new Thread(pombo);
+					       thread.start();
 				}
 
 			}
 		});
-		contentPane.add(btnConfigurarPombo);
+
+		jPContentPane.add(btnConfigurarPombo);
 		
-		txtMaximocaixa = new JTextField();
-		txtMaximocaixa.setBounds(840, 229, 50, 19);
-		contentPane.add(txtMaximocaixa);
-		txtMaximocaixa.setColumns(10);
+		jTextFieldMaximoCaixa = new JTextField();
+		jTextFieldMaximoCaixa.setBounds(840, 229, 50, 19);
+		jPContentPane.add(jTextFieldMaximoCaixa);
+		jTextFieldMaximoCaixa.setColumns(10);
 		
-		btnConfigurarCaixa = new JButton("Configurar caixa");
-		btnConfigurarCaixa.setBounds(900, 229, 170, 19);
-		btnConfigurarCaixa.addActionListener(new ActionListener() {
+		jButtonConfigurarCaixa = new JButton("Configurar caixa");
+		jButtonConfigurarCaixa.setBounds(900, 229, 170, 19);
+		jButtonConfigurarCaixa.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				if(txtMaximocaixa.getText().equals("")) JOptionPane.showMessageDialog(null, "Erro configuração do Pombo. Entre com dados corretos.");
-				else{
-					int maximoCaixa = Integer.parseInt(txtMaximocaixa.getText());
-					buffer_usado.setMaximoCaixa(maximoCaixa);
-					
-					// aqui prepara para eliminar. só irá eliminar de fato quando a thread for executar
+
+				if(jTextFieldMaximoCaixa.getText().equals("")) {
+					JOptionPane.showMessageDialog(null,
+							"Erro ao configurar o Pombo. Informe os dados corretos");
+				} else {
+					int maximoCaixa = Integer.parseInt(jTextFieldMaximoCaixa.getText());
+					buffer.setMaximoCaixa(maximoCaixa);
 				}
 
 			}
 		});
-		contentPane.add(btnConfigurarCaixa);
+
+		jPContentPane.add(jButtonConfigurarCaixa);
 		
-		lblTempoescrita = new JLabel("T.E");
-		lblTempoescrita.setBounds(810, 59, 40, 15);
-		contentPane.add(lblTempoescrita);
+		jLabelTempoEscrita = new JLabel("T.E");
+		jLabelTempoEscrita.setBounds(810, 59, 40, 15);
+		jPContentPane.add(jLabelTempoEscrita);
 		
-		lblId = new JLabel("ID");
-		lblId.setBounds(820, 80, 70, 15);
-		contentPane.add(lblId);
+		jLabelID = new JLabel("ID");
+		jLabelID.setBounds(820, 80, 70, 15);
+		jPContentPane.add(jLabelID);
 		
-		lblTc = new JLabel("T.C");
-		lblTc.setBounds(815, 140, 70, 15);
-		contentPane.add(lblTc);
+		jLabelTC = new JLabel("T.C");
+		jLabelTC.setBounds(815, 140, 70, 15);
+		jPContentPane.add(jLabelTC);
 		
-		lblTd = new JLabel("T.D");
-		lblTd.setBounds(915, 140, 70, 15);
-		contentPane.add(lblTd);
+		jLabellTD = new JLabel("T.D");
+		jLabellTD.setBounds(915, 140, 70, 15);
+		jPContentPane.add(jLabellTD);
 		
-		lblTv = new JLabel("T.V");
-		lblTv.setBounds(1015, 140, 70, 15);
-		contentPane.add(lblTv);
+		jLabelTV = new JLabel("T.V");
+		jLabelTV.setBounds(1015, 140, 70, 15);
+		jPContentPane.add(jLabelTV);
 		
-		lblNm = new JLabel("N.M");
-		lblNm.setBounds(1110, 140, 70, 15);
-		contentPane.add(lblNm);
+		jLabelNM = new JLabel("N.M");
+		jLabelNM.setBounds(1110, 140, 70, 15);
+		jPContentPane.add(jLabelNM);
 	}
 }
